@@ -7,6 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.view.GestureDetectorCompat;
@@ -90,5 +93,9 @@ public class TypeOneCard{
 
     public void insertCardIntoRecents(){
         RootLayout.addView(cardRoot);
+    }
+
+    public void setThumbnailBackground(int color){
+        thumbnailView.setBackground(new ColorDrawable(color));
     }
 }

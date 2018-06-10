@@ -16,7 +16,8 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="5dp"
+        android:layout_margin="5dp"
         android:layout_below="@id/closeBtn"
+        android:background="@android:color/white"
         android:id="@+id/appName"/>
 </RelativeLayout>
