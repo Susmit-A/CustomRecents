@@ -4,10 +4,16 @@ import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.WallpaperManager;
 import android.content.ComponentName;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.drawable.AdaptiveIconDrawable;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -107,7 +113,28 @@ public class RecentsLayoutTypeOne extends Fragment{
                     else
                         scaled = Bitmap.createScaledBitmap(thumbNail, (mDisplayMetrics.heightPixels * 5) / 9, (mDisplayMetrics.widthPixels * 4) / 9, false);
                 } catch (NullPointerException e) {
-                    continue;
+                    try {
+
+                        Drawable d = getActivity().getPackageManager().getApplicationIcon(at.topActivity.getPackageName());
+                        Bitmap bmp = Bitmap.createBitmap(d.getIntrinsicWidth(),d.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                        Canvas c = new Canvas(bmp);
+                        d.setBounds(0,0,c.getWidth(),c.getHeight());
+                        d.draw(c);
+
+                        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                            scaled = Bitmap.createBitmap((mDisplayMetrics.widthPixels * 3) / 5, (mDisplayMetrics.heightPixels * 3) / 5, Bitmap.Config.ARGB_8888);
+                        else
+                            scaled = Bitmap.createBitmap((mDisplayMetrics.heightPixels * 5) / 9, (mDisplayMetrics.widthPixels * 4) / 9, Bitmap.Config.ARGB_8888);
+
+                        Bitmap overlay = Bitmap.createBitmap(scaled.getWidth(),scaled.getHeight(),scaled.getConfig());
+                        c = new Canvas(overlay);
+                        c.drawBitmap(scaled,new Matrix(),null);
+                        c.drawBitmap(bmp,scaled.getWidth()/2 - bmp.getWidth()/2,scaled.getHeight()/2 - bmp.getHeight()/2,null);
+
+                        scaled = overlay;
+                    } catch (PackageManager.NameNotFoundException e1) {
+                        e1.printStackTrace();
+                    }
                 }
 
 
