@@ -1,12 +1,10 @@
 package com.susmit.customrecents;
 
-import android.animation.Animator;
-import android.animation.LayoutTransition;
-import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.WallpaperManager;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -14,8 +12,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.drawable.AdaptiveIconDrawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -24,18 +20,17 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
-import android.transition.Transition;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Context.ACTIVITY_SERVICE;
@@ -53,10 +48,18 @@ public class RecentsLayoutTypeOne extends Fragment{
 
     ActivityManager mActivityManager;
     List<ActivityManager.RecentTaskInfo> recentAppsList;
+    List<ActivityManager.RunningServiceInfo> runningServices;
 
     DisplayMetrics mDisplayMetrics;
 
     int thumbnailBackground = Color.WHITE;
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        runningServices = mActivityManager.getRunningServices(1000);
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -98,14 +101,18 @@ public class RecentsLayoutTypeOne extends Fragment{
             MainActivity.backupSystemPerms();
             MainActivity.changePermsTemporarily();
 
-            for(ActivityManager.RecentTaskInfo at : recentAppsList) {
+            Intent i = new Intent(Intent.ACTION_MAIN);
+            i.addCategory(Intent.CATEGORY_HOME);
+            String launcher = getActivity().getPackageManager().resolveActivity(i, PackageManager.MATCH_DEFAULT_ONLY).activityInfo.packageName;
+
+            for(ActivityManager.RecentTaskInfo at : recentAppsList){
 
                 if(at.numActivities==0)
                     continue;
                 final ActivityManager.RecentTaskInfo current = at;
                 final ComponentName activityname = at.topActivity;
                 try {
-                    if (activityname.getPackageName().equals("com.susmit.customrecents") || activityname.getPackageName().equals("com.google.android.apps.nexuslauncher"))
+                    if (activityname.getPackageName().equals("com.susmit.customrecents") || activityname.getPackageName().equals(launcher))
                         continue;
                 } catch (NullPointerException e) {
                     continue;
@@ -160,6 +167,13 @@ public class RecentsLayoutTypeOne extends Fragment{
                             @Override
                             public void run() {
                                 try {
+                                    List<String> serviceStarters = new ArrayList<>();
+                                    for(ActivityManager.RunningServiceInfo rsi : runningServices){
+                                        if(rsi.service.getPackageName().equals(current.topActivity.getPackageName())){
+                                            serviceStarters.add(rsi.service.getPackageName() + "/" + rsi.service.getClassName());
+                                        }
+                                    }
+
                                     recentAppsList.remove(current);
                                     Process p0 = Runtime.getRuntime().exec("su -c rm " + MainActivity.THUMBNAIL_PATH + "/" + current.id + "*");
                                     p0.waitFor();
@@ -167,6 +181,14 @@ public class RecentsLayoutTypeOne extends Fragment{
                                     p1.waitFor();
                                     Process killer = Runtime.getRuntime().exec("su -c am force-stop " + current.topActivity.getPackageName());
                                     killer.waitFor();
+
+                                    for(String service : serviceStarters){
+                                        Log.e("Service", "su -c am start-foreground-service "+service);
+                                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                                            Runtime.getRuntime().exec("su -c am start-foreground-service "+service);
+                                        else
+                                            Runtime.getRuntime().exec("su -c am start-service "+service);
+                                    }
                                 } catch (IOException | InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -195,7 +217,7 @@ public class RecentsLayoutTypeOne extends Fragment{
                     @Override
                     public void onClick(View v) {
                         getActivity().moveTaskToBack(true);
-                        getActivity().finishAndRemoveTask();
+                        getActivity().finish();
                         getActivity().overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
                     }
                 });

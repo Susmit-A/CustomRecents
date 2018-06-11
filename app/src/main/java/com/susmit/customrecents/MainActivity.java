@@ -122,14 +122,6 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                /*try {
-                    Process p = Runtime.getRuntime().exec("su -c cp " + THUMBNAIL_PATH + "/*.jpg " + TEMP_THUMBNAIL_DIR);
-                    p.waitFor();
-                    Process p2 = Runtime.getRuntime().exec("su -c chmod 666 " + TEMP_THUMBNAIL_DIR + "/*");
-                    p2.waitFor();
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }*/
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -144,13 +136,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        finishAndRemoveTask();
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
     @Override
     protected void onStop() {
         super.onStop();
-        finishAndRemoveTask();
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
     }
 }
