@@ -167,6 +167,9 @@ public class RecentsLayoutTypeOne extends Fragment{
                             @Override
                             public void run() {
                                 try {
+                                    Log.e( " "," ");
+                                    Log.e( " "," ");
+                                    Log.e("Activity:",current.topActivity.getClassName());
                                     List<String> serviceStarters = new ArrayList<>();
                                     for(ActivityManager.RunningServiceInfo rsi : runningServices){
                                         if(rsi.service.getPackageName().equals(current.topActivity.getPackageName())){
@@ -179,6 +182,8 @@ public class RecentsLayoutTypeOne extends Fragment{
                                     p0.waitFor();
                                     Process p1 = Runtime.getRuntime().exec("su -c rm " + MainActivity.RECENT_TASKS_XML_PATH + "/" + current.id + "*");
                                     p1.waitFor();
+                                    Process bgKiller = Runtime.getRuntime().exec("su -c am kill " + current.topActivity.getPackageName());
+                                    bgKiller.waitFor();
                                     Process killer = Runtime.getRuntime().exec("su -c am force-stop " + current.topActivity.getPackageName());
                                     killer.waitFor();
 
